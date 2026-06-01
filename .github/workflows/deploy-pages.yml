@@ -1,8 +1,8 @@
 name: Deploy to GitHub Pages
 
-# Builds the static export and publishes it to the `gh-pages` branch.
-# After the first successful run, set repo Settings → Pages →
-# Source = "Deploy from a branch" → Branch: gh-pages → / (root).
+# Belt-and-suspenders deploy: publishes the static export via BOTH the
+# GitHub Actions Pages method (which also force-enables "workflow" mode) AND a
+# gh-pages branch, so the site goes live regardless of the repo's Pages source.
 
 on:
   push:
@@ -11,13 +11,15 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_BASE_PATH: /GalvBot
@@ -33,16 +35,42 @@ jobs:
       - run: npm ci
 
       # Static export can't include POST route handlers (no Node server on
-      # Pages). The app falls back to in-browser scan extraction, so we drop
-      # the server route for the static build only.
+      # Pages). The app falls back to in-browser scan extraction.
       - name: Remove server-only API routes for static export
         run: rm -rf app/api
 
       - run: npm run build
 
-      - name: Publish to gh-pages
+      - run: touch out/.nojekyll
+
+      # Method 1: gh-pages branch (works with "Deploy from a branch" source).
+      - name: Publish to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./out
-          # peaceiris adds .nojekyll automatically so _next/ is served.
+
+      # Method 2: GitHub Actions Pages artifact (force-enables workflow mode).
+      - name: Configure Pages (force workflow mode)
+        uses: actions/configure-pages@v5
+        continue-on-error: true
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Don't fail the overall run if the source is set to "branch" instead of
+    # "GitHub Actions"; the gh-pages branch still serves the site in that case.
+    continue-on-error: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
