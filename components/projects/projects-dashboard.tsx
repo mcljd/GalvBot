@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Copy, Plus, Trash2, MapPinned } from "lucide-react";
+import { Copy, Plus, Trash2, MapPinned, ScanLine } from "lucide-react";
 import type { LayoutProject } from "@/lib/types";
 import { useProjects } from "@/hooks/use-projects";
 import { bbox } from "@/lib/geometry";
@@ -50,12 +50,18 @@ export function ProjectsDashboard() {
             export.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4" /> New project
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/projects/import">
+              <ScanLine className="h-4 w-4" /> Import scan
+            </Link>
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4" /> New project
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create a project</DialogTitle>
@@ -88,7 +94,8 @@ export function ProjectsDashboard() {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       {loading ? (
