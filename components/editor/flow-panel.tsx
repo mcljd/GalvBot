@@ -4,6 +4,7 @@ import * as React from "react";
 import { Plus, Trash2, Flame, ArrowRight } from "lucide-react";
 import { useEditor } from "@/lib/store/editor";
 import { MACHINE_META } from "@/lib/types";
+import { computeFlowHeatmap } from "@/lib/flow/heatmap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,17 @@ import { Separator } from "@/components/ui/separator";
 
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border px-2 py-1.5">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        {label}
+      </div>
+      <div className="text-sm font-semibold tabular-nums">{value}</div>
+    </div>
+  );
+}
 
 export function FlowPanel() {
   const project = useEditor((s) => s.project);
@@ -23,6 +35,13 @@ export function FlowPanel() {
   const [from, setFrom] = React.useState("");
   const [to, setTo] = React.useState("");
   const [units, setUnits] = React.useState(50);
+
+  const analysis = React.useMemo(() => {
+    if (!project || project.flows.length === 0) return null;
+    const field = computeFlowHeatmap(project);
+    const totalUnits = project.flows.reduce((s, f) => s + f.unitsPerDay, 0);
+    return { routedWork: field.routedWork, totalUnits };
+  }, [project]);
 
   if (!project) return null;
   const machines = project.machines;
@@ -185,11 +204,25 @@ export function FlowPanel() {
             <Flame className="h-4 w-4" /> {showHeatmap ? "On" : "Off"}
           </Button>
         </div>
+        {analysis && (
+          <div className="grid grid-cols-2 gap-2">
+            <Metric
+              label="Routed transport work"
+              value={`${analysis.routedWork.toLocaleString()} m·units/day`}
+            />
+            <Metric
+              label="Total throughput"
+              value={`${analysis.totalUnits.toLocaleString()} units/day`}
+            />
+          </div>
+        )}
         <p className="text-[11px] leading-relaxed text-muted-foreground">
-          The heatmap overlays aggregate material-flow intensity by tracing
-          throughput-weighted Manhattan routes between connected machines. It is
-          a transparent heuristic flow surface — not a CFD or neural physics
-          simulation — to help you spot congested aisles.
+          The heatmap routes each flow with A* around walls, obstacles, and
+          no-go zones (and softly around other machines), then accumulates
+          throughput along the cells each route crosses. It is a transparent,
+          obstacle-aware routing model — not a CFD or neural physics simulation —
+          to help you spot congested aisles. &ldquo;Routed transport work&rdquo;
+          sums throughput × routed distance; lower is leaner.
         </p>
       </section>
     </div>

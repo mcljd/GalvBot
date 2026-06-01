@@ -1,12 +1,16 @@
 import type { LayoutProject, Vec2 } from "@/lib/types";
-import { bbox, machineCenter } from "@/lib/geometry";
+import { machineCenter } from "@/lib/geometry";
+import { buildCostGrid, worldToCell, type CostGrid } from "@/lib/optimizer/grid";
+import { routeCells } from "./routing";
 
 /**
  * A discretized scalar field over the floor used to render the material-flow
  * heatmap. `values` is row-major (rows × cols). This is a transparent,
- * heuristic flow model — it traces L-shaped (Manhattan) routes between
- * connected machines and accumulates throughput along the cells they cross.
- * It is NOT a neural/CFD physics solver.
+ * heuristic flow model: it routes each material flow between connected
+ * machines with A* around walls, obstacles, and (softly) other machines, then
+ * accumulates throughput along the cells each route crosses. It is NOT a
+ * neural/CFD physics solver — it is an explainable, obstacle-aware routing
+ * model that surfaces congested aisles.
  */
 export interface HeatmapField {
   origin: Vec2; // top-left in meters
@@ -15,21 +19,20 @@ export interface HeatmapField {
   rows: number;
   values: number[];
   max: number;
+  /** Total routed transport work: Σ unitsPerDay × routed-distance (meters). */
+  routedWork: number;
 }
 
 export function computeFlowHeatmap(project: LayoutProject): HeatmapField {
-  const b = bbox(project.floor.boundary);
-  const cell = Math.max(project.floor.gridResolution, 0.25);
-  const cols = Math.max(1, Math.ceil(b.w / cell));
-  const rows = Math.max(1, Math.ceil(b.h / cell));
+  const grid = buildCostGrid(project, { machinePenalty: 8 });
+  return heatmapFromGrid(project, grid);
+}
+
+function heatmapFromGrid(project: LayoutProject, grid: CostGrid): HeatmapField {
+  const { cols, rows, cell, origin } = grid;
   const values = new Array(cols * rows).fill(0);
-
-  const toCell = (p: Vec2) => ({
-    cx: Math.min(cols - 1, Math.max(0, Math.floor((p.x - b.x) / cell))),
-    cy: Math.min(rows - 1, Math.max(0, Math.floor((p.y - b.y) / cell))),
-  });
-
   const byId = new Map(project.machines.map((m) => [m.id, m]));
+  let routedWork = 0;
 
   for (const f of project.flows) {
     const a = byId.get(f.from);
@@ -38,25 +41,58 @@ export function computeFlowHeatmap(project: LayoutProject): HeatmapField {
     const ca = machineCenter(a);
     const cc = machineCenter(c);
     if (!ca || !cc) continue;
-    const s = toCell(ca);
-    const e = toCell(cc);
 
-    // L-shaped Manhattan route: horizontal leg then vertical leg.
-    const w = f.unitsPerDay;
-    const stepX = Math.sign(e.cx - s.cx) || 1;
-    for (let x = s.cx; x !== e.cx + stepX; x += stepX) {
-      values[s.cy * cols + x] += w;
-      if (x === e.cx) break;
-    }
-    const stepY = Math.sign(e.cy - s.cy) || 1;
-    for (let y = s.cy; y !== e.cy + stepY; y += stepY) {
-      values[y * cols + e.cx] += w;
-      if (y === e.cy) break;
-    }
+    const s = worldToCell(grid, ca);
+    const e = worldToCell(grid, cc);
+    const startIdx = s.cy * cols + s.cx;
+    const goalIdx = e.cy * cols + e.cx;
+
+    const route = routeCells(grid, startIdx, goalIdx);
+    const path =
+      route.cells.length > 0
+        ? route.cells
+        : straightFallback(s, e, cols, rows);
+
+    for (const idx of path) values[idx] += f.unitsPerDay;
+    const len = route.cells.length > 0 ? route.length : path.length * cell;
+    routedWork += f.unitsPerDay * len;
   }
 
   let max = 0;
   for (const v of values) if (v > max) max = v;
 
-  return { origin: { x: b.x, y: b.y }, cell, cols, rows, values, max };
+  return {
+    origin,
+    cell,
+    cols,
+    rows,
+    values,
+    max,
+    routedWork: Math.round(routedWork),
+  };
+}
+
+/** L-shaped fallback if A* finds no route (e.g. fully walled-in machine). */
+function straightFallback(
+  s: { cx: number; cy: number },
+  e: { cx: number; cy: number },
+  cols: number,
+  rows: number
+): number[] {
+  const out: number[] = [];
+  const stepX = Math.sign(e.cx - s.cx) || 1;
+  for (let x = s.cx; ; x += stepX) {
+    out.push(s.cy * cols + clamp(x, cols));
+    if (x === e.cx) break;
+  }
+  const stepY = Math.sign(e.cy - s.cy) || 1;
+  for (let y = s.cy; ; y += stepY) {
+    out.push(clamp(y, rows) * cols + e.cx);
+    if (y === e.cy) break;
+  }
+  return out;
+}
+
+function clamp(v: number, n: number) {
+  return Math.min(n - 1, Math.max(0, v));
 }
