@@ -1,12 +1,10 @@
-import { SiteHeader } from "@/components/site-header";
+import { EditorLoader } from "@/components/editor/editor-loader";
 
-export default function EditorPage() {
-  return (
-    <>
-      <SiteHeader />
-      <main className="flex-1 p-8">
-        <p className="text-muted-foreground">Layout editor — coming up next.</p>
-      </main>
-    </>
-  );
+export default async function EditorPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <EditorLoader projectId={id} />;
 }
