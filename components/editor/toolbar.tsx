@@ -16,7 +16,6 @@ import {
   Flame,
 } from "lucide-react";
 import { useEditor, type EditorTool } from "@/lib/store/editor";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
