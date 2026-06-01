@@ -154,6 +154,26 @@ export function ScanImporter() {
                 }}
               />
             </label>
+            <div className="mt-3 text-center text-xs text-muted-foreground">
+              No file handy?{" "}
+              <button
+                type="button"
+                className="font-medium text-primary hover:underline"
+                disabled={loading}
+                onClick={async () => {
+                  const res = await fetch("/sample-floor-scan.png");
+                  const blob = await res.blob();
+                  handleFile(
+                    new File([blob], "sample-floor-scan.png", {
+                      type: "image/png",
+                    })
+                  );
+                }}
+              >
+                Try a sample blueprint
+              </button>
+              .
+            </div>
           </CardContent>
         </Card>
       )}
