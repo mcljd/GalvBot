@@ -1,5 +1,8 @@
 name: Deploy to GitHub Pages
 
+# Publishes the static export to GitHub Pages. Requires repo Settings → Pages →
+# Source = "GitHub Actions" (this workflow also attempts to enable it).
+
 on:
   push:
     branches: ["claude/funny-dijkstra-QWsVk", "main"]
