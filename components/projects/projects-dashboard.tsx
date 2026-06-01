@@ -37,7 +37,7 @@ export function ProjectsDashboard() {
     setBusy(false);
     setOpen(false);
     setName("");
-    router.push(`/projects/${p.id}`);
+    router.push(`/editor?id=${p.id}`);
   }
 
   return (
@@ -138,7 +138,7 @@ function ProjectCard({
   return (
     <Card className="group overflow-hidden">
       <Link
-        href={`/projects/${project.id}`}
+        href={`/editor?id=${project.id}`}
         className="block aspect-video border-b bg-canvas-bg"
       >
         <ProjectThumbnail project={project} className="h-full w-full" />
@@ -146,7 +146,7 @@ function ProjectCard({
       <CardContent className="pt-4">
         <div className="flex items-start justify-between gap-2">
           <Link
-            href={`/projects/${project.id}`}
+            href={`/editor?id=${project.id}`}
             className="font-semibold hover:underline"
           >
             {project.name}
@@ -165,7 +165,7 @@ function ProjectCard({
       </CardContent>
       <CardFooter className="gap-2">
         <Button asChild size="sm" className="flex-1">
-          <Link href={`/projects/${project.id}`}>
+          <Link href={`/editor?id=${project.id}`}>
             <MapPinned className="h-4 w-4" /> Open
           </Link>
         </Button>

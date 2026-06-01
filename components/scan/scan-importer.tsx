@@ -8,6 +8,7 @@ import type { Vec2 } from "@/lib/types";
 import type { FloorProposal } from "@/lib/scan/types";
 import { getStorageProvider } from "@/lib/storage";
 import { createEmptyProject } from "@/lib/project";
+import { extractFloorInBrowser } from "@/lib/scan/browser";
 import { uid } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 type Step = "upload" | "review";
+
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export function ScanImporter() {
   const router = useRouter();
@@ -38,12 +41,27 @@ export function ScanImporter() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(URL.createObjectURL(file));
     try {
-      const fd = new FormData();
-      fd.append("image", file);
-      const res = await fetch("/api/scan", { method: "POST", body: fd });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Extraction failed");
-      setProposal(json.proposal as FloorProposal);
+      let proposal: FloorProposal | null = null;
+      // Prefer the server route (sharp); fall back to in-browser extraction
+      // when no Node server is available (e.g. the static GitHub Pages demo).
+      try {
+        const fd = new FormData();
+        fd.append("image", file);
+        const res = await fetch(`${BASE_PATH}/api/scan`, {
+          method: "POST",
+          body: fd,
+        });
+        if (res.ok) {
+          const json = await res.json();
+          proposal = json.proposal as FloorProposal;
+        }
+      } catch {
+        // ignore — fall back to browser extraction below
+      }
+      if (!proposal) {
+        proposal = await extractFloorInBrowser(file);
+      }
+      setProposal(proposal);
       setStep("review");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -96,7 +114,7 @@ export function ScanImporter() {
     const project = createEmptyProject(name, floor);
     void getStorageProvider()
       .save(project)
-      .then(() => router.push(`/projects/${project.id}`));
+      .then(() => router.push(`/editor?id=${project.id}`));
   }
 
   return (
@@ -161,7 +179,7 @@ export function ScanImporter() {
                 className="font-medium text-primary hover:underline"
                 disabled={loading}
                 onClick={async () => {
-                  const res = await fetch("/sample-floor-scan.png");
+                  const res = await fetch(`${BASE_PATH}/sample-floor-scan.png`);
                   const blob = await res.blob();
                   handleFile(
                     new File([blob], "sample-floor-scan.png", {
