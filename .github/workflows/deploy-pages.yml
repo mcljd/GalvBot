@@ -1,7 +1,8 @@
 name: Deploy to GitHub Pages
 
-# Publishes the static export to GitHub Pages. Requires repo Settings → Pages →
-# Source = "GitHub Actions" (this workflow also attempts to enable it).
+# Builds the static export and publishes it to the `gh-pages` branch.
+# After the first successful run, set repo Settings → Pages →
+# Source = "Deploy from a branch" → Branch: gh-pages → / (root).
 
 on:
   push:
@@ -9,19 +10,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      # Project site lives at https://<user>.github.io/GalvBot/
       NEXT_PUBLIC_BASE_PATH: /GalvBot
       STATIC_EXPORT: "true"
     steps:
@@ -42,23 +40,9 @@ jobs:
 
       - run: npm run build
 
-      - name: Disable Jekyll (preserve _next directory)
-        run: touch out/.nojekyll
-
-      - uses: actions/configure-pages@v5
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          enablement: true
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./out
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
+          # peaceiris adds .nojekyll automatically so _next/ is served.
