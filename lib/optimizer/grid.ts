@@ -19,6 +19,9 @@ export interface CostGrid {
 export interface BuildGridOptions {
   /** Penalty added to cells covered by a machine footprint. */
   machinePenalty?: number;
+  /** Hard-block machine footprints (cost = Infinity) instead of penalizing.
+   *  Used for worker-walkability / reachability analysis. */
+  blockMachines?: boolean;
   /** Override the grid cell size (meters). Defaults to floor.gridResolution. */
   cell?: number;
 }
@@ -71,7 +74,8 @@ export function buildCostGrid(
       }
       for (const r of machineRects) {
         if (inRect(p, r)) {
-          cost[i] += machinePenalty;
+          if (opts.blockMachines) cost[i] = Infinity;
+          else cost[i] += machinePenalty;
           break;
         }
       }

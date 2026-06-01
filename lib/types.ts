@@ -144,7 +144,15 @@ export const DEFAULT_SOLVER_SETTINGS: SolverSettings = {
 /** Human-readable metadata for each machine type. */
 export const MACHINE_META: Record<
   MachineType,
-  { label: string; color: string; defaultFootprint: { w: number; d: number }; defaultClearance: number; defaultHeat: "low" | "med" | "high" }
+  {
+    label: string;
+    color: string;
+    defaultFootprint: { w: number; d: number };
+    defaultClearance: number;
+    defaultHeat: "low" | "med" | "high";
+    /** Typical electrical draw (kW) used when a machine has no explicit value. */
+    defaultPowerKw: number;
+  }
 > = {
   "3d_printer": {
     label: "3D Printer (FDM/SLA)",
@@ -152,6 +160,7 @@ export const MACHINE_META: Record<
     defaultFootprint: { w: 1.2, d: 1.0 },
     defaultClearance: 0.8,
     defaultHeat: "med",
+    defaultPowerKw: 0.5,
   },
   cnc: {
     label: "CNC Machine",
@@ -159,6 +168,7 @@ export const MACHINE_META: Record<
     defaultFootprint: { w: 2.4, d: 2.0 },
     defaultClearance: 1.0,
     defaultHeat: "high",
+    defaultPowerKw: 7.5,
   },
   assembly_station: {
     label: "Assembly Station",
@@ -166,6 +176,7 @@ export const MACHINE_META: Record<
     defaultFootprint: { w: 2.0, d: 1.5 },
     defaultClearance: 1.0,
     defaultHeat: "low",
+    defaultPowerKw: 1.0,
   },
   qc_inspection: {
     label: "QC / Inspection",
@@ -173,6 +184,7 @@ export const MACHINE_META: Record<
     defaultFootprint: { w: 1.5, d: 1.5 },
     defaultClearance: 0.8,
     defaultHeat: "low",
+    defaultPowerKw: 0.5,
   },
   packaging: {
     label: "Packaging",
@@ -180,6 +192,7 @@ export const MACHINE_META: Record<
     defaultFootprint: { w: 2.5, d: 1.8 },
     defaultClearance: 1.0,
     defaultHeat: "low",
+    defaultPowerKw: 2.0,
   },
   storage_rack: {
     label: "Storage Rack",
@@ -187,6 +200,7 @@ export const MACHINE_META: Record<
     defaultFootprint: { w: 3.0, d: 1.2 },
     defaultClearance: 0.6,
     defaultHeat: "low",
+    defaultPowerKw: 0.1,
   },
   post_processing: {
     label: "Post-Processing",
@@ -194,6 +208,7 @@ export const MACHINE_META: Record<
     defaultFootprint: { w: 1.8, d: 1.5 },
     defaultClearance: 0.9,
     defaultHeat: "med",
+    defaultPowerKw: 3.0,
   },
   raw_material: {
     label: "Raw Material",
@@ -201,5 +216,6 @@ export const MACHINE_META: Record<
     defaultFootprint: { w: 2.5, d: 2.0 },
     defaultClearance: 0.8,
     defaultHeat: "low",
+    defaultPowerKw: 0.0,
   },
 };
