@@ -5,23 +5,27 @@ import { SolverPanel } from "./solver-panel";
 import { ScorePanel } from "./score-panel";
 import { FlowPanel } from "./flow-panel";
 import { InsightsPanel } from "./insights-panel";
+import { RoiPanel } from "./roi-panel";
 
 export function RightPanel() {
   return (
     <Tabs defaultValue="solver" className="flex h-full flex-col">
-      <div className="border-b px-3 pt-3">
+      <div className="border-b px-2 pt-3">
         <TabsList className="w-full">
-          <TabsTrigger value="solver" className="flex-1 text-xs">
+          <TabsTrigger value="solver" className="flex-1 px-1 text-[11px]">
             Solver
           </TabsTrigger>
-          <TabsTrigger value="score" className="flex-1 text-xs">
+          <TabsTrigger value="score" className="flex-1 px-1 text-[11px]">
             Score
           </TabsTrigger>
-          <TabsTrigger value="flows" className="flex-1 text-xs">
+          <TabsTrigger value="flows" className="flex-1 px-1 text-[11px]">
             Flows
           </TabsTrigger>
-          <TabsTrigger value="insights" className="flex-1 text-xs">
+          <TabsTrigger value="insights" className="flex-1 px-1 text-[11px]">
             Insights
+          </TabsTrigger>
+          <TabsTrigger value="roi" className="flex-1 px-1 text-[11px]">
+            ROI
           </TabsTrigger>
         </TabsList>
       </div>
@@ -37,6 +41,9 @@ export function RightPanel() {
         </TabsContent>
         <TabsContent value="insights" className="mt-0">
           <InsightsPanel />
+        </TabsContent>
+        <TabsContent value="roi" className="mt-0">
+          <RoiPanel />
         </TabsContent>
       </div>
     </Tabs>

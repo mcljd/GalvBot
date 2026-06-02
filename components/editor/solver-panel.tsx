@@ -5,6 +5,8 @@ import { Play, Square, Check, Undo2, Loader2 } from "lucide-react";
 import { useEditor } from "@/lib/store/editor";
 import { useOptimizer } from "@/hooks/use-optimizer";
 import { scoreLayout } from "@/lib/optimizer/scoring";
+import { computeFlowHeatmap } from "@/lib/flow/heatmap";
+import { estimateAnnualTransportCost } from "@/lib/economics";
 import { DEFAULT_SOLVER_SETTINGS, type LayoutScore } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -34,6 +36,24 @@ export function SolverPanel() {
   );
   const [startFromCurrent, setStartFromCurrent] = React.useState(false);
   const [baseline, setBaseline] = React.useState<LayoutScore | null>(null);
+
+  // Estimated annual material-handling cost saved by the optimized layout.
+  const savings = React.useMemo(() => {
+    if (!result || !project) return null;
+    const before = computeFlowHeatmap(project).routedWork;
+    const optimized = {
+      ...project,
+      machines: project.machines.map((m) => {
+        const p = result.placements.find((pl) => pl.machineId === m.id);
+        return p ? { ...m, pos: p.pos, rotationDeg: p.rotationDeg } : m;
+      }),
+    };
+    const after = computeFlowHeatmap(optimized).routedWork;
+    const saved =
+      estimateAnnualTransportCost(before).cost -
+      estimateAnnualTransportCost(after).cost;
+    return saved;
+  }, [result, project]);
 
   if (!project) return null;
 
@@ -215,6 +235,23 @@ export function SolverPanel() {
                 <DeltaNote before={baseline.total} after={result.score.total} />
               )}
             </div>
+            {savings !== null && Math.abs(savings) >= 1 && (
+              <div
+                className={
+                  savings > 0
+                    ? "rounded-md bg-success/10 px-2 py-1.5 text-xs font-medium text-success"
+                    : "text-xs text-muted-foreground"
+                }
+              >
+                {savings > 0
+                  ? `≈ ${savings.toLocaleString("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      maximumFractionDigits: 0,
+                    })}/yr lower material-handling cost`
+                  : "No transport-cost saving over your current layout."}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <Button onClick={handleApply}>
                 <Check className="h-4 w-4" /> Apply optimized

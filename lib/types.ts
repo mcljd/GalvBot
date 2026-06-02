@@ -37,6 +37,8 @@ export interface Machine {
   /** Required walkable margin around the machine, in meters. */
   clearance: number;
   powerKw?: number;
+  /** Process capacity in units/day (0/undefined = not a throughput step). */
+  capacityPerDay?: number;
   /** Heat output influences required separation between machines. */
   heatOutput?: "low" | "med" | "high";
   /** Position of the footprint's top-left origin, assigned by solver or user. */
@@ -152,6 +154,8 @@ export const MACHINE_META: Record<
     defaultHeat: "low" | "med" | "high";
     /** Typical electrical draw (kW) used when a machine has no explicit value. */
     defaultPowerKw: number;
+    /** Typical throughput capacity (units/day); 0 = passive (storage/raw). */
+    defaultCapacityPerDay: number;
   }
 > = {
   "3d_printer": {
@@ -161,6 +165,7 @@ export const MACHINE_META: Record<
     defaultClearance: 0.8,
     defaultHeat: "med",
     defaultPowerKw: 0.5,
+    defaultCapacityPerDay: 12,
   },
   cnc: {
     label: "CNC Machine",
@@ -169,6 +174,7 @@ export const MACHINE_META: Record<
     defaultClearance: 1.0,
     defaultHeat: "high",
     defaultPowerKw: 7.5,
+    defaultCapacityPerDay: 48,
   },
   assembly_station: {
     label: "Assembly Station",
@@ -177,6 +183,7 @@ export const MACHINE_META: Record<
     defaultClearance: 1.0,
     defaultHeat: "low",
     defaultPowerKw: 1.0,
+    defaultCapacityPerDay: 120,
   },
   qc_inspection: {
     label: "QC / Inspection",
@@ -185,6 +192,7 @@ export const MACHINE_META: Record<
     defaultClearance: 0.8,
     defaultHeat: "low",
     defaultPowerKw: 0.5,
+    defaultCapacityPerDay: 200,
   },
   packaging: {
     label: "Packaging",
@@ -193,6 +201,7 @@ export const MACHINE_META: Record<
     defaultClearance: 1.0,
     defaultHeat: "low",
     defaultPowerKw: 2.0,
+    defaultCapacityPerDay: 300,
   },
   storage_rack: {
     label: "Storage Rack",
@@ -201,6 +210,7 @@ export const MACHINE_META: Record<
     defaultClearance: 0.6,
     defaultHeat: "low",
     defaultPowerKw: 0.1,
+    defaultCapacityPerDay: 0,
   },
   post_processing: {
     label: "Post-Processing",
@@ -209,6 +219,7 @@ export const MACHINE_META: Record<
     defaultClearance: 0.9,
     defaultHeat: "med",
     defaultPowerKw: 3.0,
+    defaultCapacityPerDay: 150,
   },
   raw_material: {
     label: "Raw Material",
@@ -217,5 +228,6 @@ export const MACHINE_META: Record<
     defaultClearance: 0.8,
     defaultHeat: "low",
     defaultPowerKw: 0.0,
+    defaultCapacityPerDay: 0,
   },
 };
