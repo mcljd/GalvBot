@@ -4,6 +4,7 @@ import * as React from "react";
 import { Download, FileJson, FileText, Image as ImageIcon } from "lucide-react";
 import { useEditor } from "@/lib/store/editor";
 import { scoreLayout } from "@/lib/optimizer/scoring";
+import { computeBusinessCase } from "@/lib/economics";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -62,6 +63,7 @@ export function ExportMenu({
     if (!project) return;
     const { jsPDF } = await import("jspdf");
     const score = scoreLayout(project);
+    const bc = computeBusinessCase(project);
     const img = canvasRef.current?.toDataURL();
 
     const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -105,6 +107,35 @@ export function ExportMenu({
       doc.text(label, margin, y);
       doc.setTextColor(0);
       doc.text(`${val.toFixed(1)} / 100`, margin + 60, y);
+      y += 6;
+    }
+
+    // Operating economics
+    y += 4;
+    doc.setFontSize(13);
+    doc.text("Operating economics (estimated)", margin, y);
+    y += 6;
+    doc.setFontSize(11);
+    const econ: [string, string][] = [
+      [
+        "Annual material handling",
+        `$${bc.annualTransportCost.toLocaleString()}/yr`,
+      ],
+      ["Material travel", `${bc.routedMetersPerDay.toLocaleString()} m/day`],
+      [
+        "Bottleneck",
+        bc.bottleneck
+          ? `${bc.bottleneck.label} (${Math.round(
+              bc.bottleneck.utilization * 100
+            )}% capacity)`
+          : "none identified",
+      ],
+    ];
+    for (const [label, val] of econ) {
+      doc.setTextColor(80);
+      doc.text(label, margin, y);
+      doc.setTextColor(0);
+      doc.text(val, margin + 60, y);
       y += 6;
     }
 
