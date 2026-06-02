@@ -101,8 +101,14 @@ export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
     function clampMachine(m: Machine, pos: Vec2): Vec2 {
       const f = rotatedFootprint(m);
       return {
-        x: Math.min(Math.max(floorBox.x, pos.x), floorBox.x + floorBox.w - f.w),
-        y: Math.min(Math.max(floorBox.y, pos.y), floorBox.y + floorBox.h - f.d),
+        x: Math.min(
+          Math.max(floorBox.x, pos.x),
+          Math.max(floorBox.x, floorBox.x + floorBox.w - f.w)
+        ),
+        y: Math.min(
+          Math.max(floorBox.y, pos.y),
+          Math.max(floorBox.y, floorBox.y + floorBox.h - f.d)
+        ),
       };
     }
 

@@ -141,3 +141,30 @@ describe("anneal", () => {
     expect(res.score.materialFlow).toBeGreaterThan(before.materialFlow);
   });
 });
+
+import { bbox } from "@/lib/geometry";
+import { machineFootprintRect } from "@/lib/geometry";
+
+describe("anneal bounds safety", () => {
+  it("never leaves a machine out of bounds in the best result (incl. swaps)", () => {
+    const p = demoProject();
+    // bias toward swaps to exercise the swap-clamp path
+    const res = anneal(p, {
+      settings: {
+        ...fastSettings,
+        iterations: 3000,
+        moveWeights: { translate: 0.2, rotate: 0.2, swap: 0.6 },
+      },
+    });
+    const fb = bbox(p.floor.boundary);
+    const byId = new Map(p.machines.map((m) => [m.id, m]));
+    for (const pl of res.placements) {
+      const m = { ...byId.get(pl.machineId)!, rotationDeg: pl.rotationDeg };
+      const r = machineFootprintRect(m, pl.pos, false);
+      expect(r.x).toBeGreaterThanOrEqual(fb.x - 1e-6);
+      expect(r.y).toBeGreaterThanOrEqual(fb.y - 1e-6);
+      expect(r.x + r.w).toBeLessThanOrEqual(fb.x + fb.w + 1e-6);
+      expect(r.y + r.h).toBeLessThanOrEqual(fb.y + fb.h + 1e-6);
+    }
+  });
+});

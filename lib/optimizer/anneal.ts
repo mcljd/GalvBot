@@ -240,13 +240,18 @@ export function anneal(
           floor
         );
       } else {
-        // swap two machines' positions
+        // swap two machines' positions, then re-clamp both for their own
+        // footprint so a larger machine taking an edge slot can't overflow.
         const a = movableIdx[(rand() * movableIdx.length) | 0];
         let b = movableIdx[(rand() * movableIdx.length) | 0];
         if (a === b) b = movableIdx[(a + 1) % movableIdx.length];
         const tmp = next[a].pos;
         next[a].pos = next[b].pos;
         next[b].pos = tmp;
+        const ma = machineById.get(next[a].id)!;
+        const mb = machineById.get(next[b].id)!;
+        next[a].pos = clampPos({ ...ma, rotationDeg: next[a].rot }, next[a].pos, floor);
+        next[b].pos = clampPos({ ...mb, rotationDeg: next[b].rot }, next[b].pos, floor);
       }
 
       const e = energy(project, next);

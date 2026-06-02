@@ -54,7 +54,12 @@ function heatmapFromGrid(project: LayoutProject, grid: CostGrid): HeatmapField {
         : straightFallback(s, e, cols, rows);
 
     for (const idx of path) values[idx] += f.unitsPerDay;
-    const len = route.cells.length > 0 ? route.length : path.length * cell;
+    // routed distance in meters: A* reports it directly; the fallback counts
+    // path segments (cells - 1), matching A*'s (cells-1)×cell convention.
+    const len =
+      route.cells.length > 0
+        ? route.length
+        : Math.max(0, path.length - 1) * cell;
     routedWork += f.unitsPerDay * len;
   }
 
@@ -85,10 +90,14 @@ function straightFallback(
     out.push(s.cy * cols + clamp(x, cols));
     if (x === e.cx) break;
   }
+  // start the vertical leg one step in to avoid double-counting the corner
+  // cell (e.cx, s.cy) already pushed by the horizontal leg.
   const stepY = Math.sign(e.cy - s.cy) || 1;
-  for (let y = s.cy; ; y += stepY) {
-    out.push(clamp(y, rows) * cols + e.cx);
-    if (y === e.cy) break;
+  if (s.cy !== e.cy) {
+    for (let y = s.cy + stepY; ; y += stepY) {
+      out.push(clamp(y, rows) * cols + e.cx);
+      if (y === e.cy) break;
+    }
   }
   return out;
 }

@@ -204,8 +204,8 @@ export const useEditor = create<EditorState>((set, get) => ({
       const fb = bbox(d.floor.boundary);
       const f = rotatedFootprint(m);
       m.pos = {
-        x: Math.min(Math.max(fb.x, m.pos.x + dx), fb.x + fb.w - f.w),
-        y: Math.min(Math.max(fb.y, m.pos.y + dy), fb.y + fb.h - f.d),
+        x: Math.min(Math.max(fb.x, m.pos.x + dx), Math.max(fb.x, fb.x + fb.w - f.w)),
+        y: Math.min(Math.max(fb.y, m.pos.y + dy), Math.max(fb.y, fb.y + fb.h - f.d)),
       };
     }),
 
@@ -249,6 +249,7 @@ export const useEditor = create<EditorState>((set, get) => ({
 
   addFlow: (from, to, unitsPerDay) =>
     commit(set, get, (d) => {
+      if (from === to) return; // a machine cannot flow to itself
       const existing = d.flows.find((f) => f.from === from && f.to === to);
       if (existing) existing.unitsPerDay = unitsPerDay;
       else d.flows.push({ from, to, unitsPerDay });
@@ -288,7 +289,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   setWeights: (w) =>
     commit(set, get, (d) => {
       d.weights = w;
-    }, false),
+    }),
 
   renameProject: (name) =>
     commit(set, get, (d) => {
