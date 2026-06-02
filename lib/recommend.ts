@@ -30,7 +30,6 @@ export function generateSuggestions(
   maxRelocations = 3
 ): Suggestion[] {
   const out: Suggestion[] = [];
-  const base = scoreLayout(project).total;
 
   // 1. Flow-driven relocations: for the highest-throughput edges, try moving a
   //    movable endpoint adjacent to its partner and keep moves that score better.

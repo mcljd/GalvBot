@@ -15,6 +15,7 @@ import {
   Route,
   Flame,
   DoorOpen,
+  Spline,
 } from "lucide-react";
 import { useEditor, type EditorTool } from "@/lib/store/editor";
 import { Button } from "@/components/ui/button";
@@ -49,8 +50,10 @@ export function Toolbar({
   const rotateMachine = useEditor((s) => s.rotateMachine);
   const showFlows = useEditor((s) => s.showFlows);
   const showHeatmap = useEditor((s) => s.showHeatmap);
+  const showRoutes = useEditor((s) => s.showRoutes);
   const toggleFlows = useEditor((s) => s.toggleFlows);
   const toggleHeatmap = useEditor((s) => s.toggleHeatmap);
+  const toggleRoutes = useEditor((s) => s.toggleRoutes);
   const renameProject = useEditor((s) => s.renameProject);
 
   return (
@@ -146,6 +149,16 @@ export function Toolbar({
         onClick={toggleHeatmap}
       >
         <Flame className="h-4 w-4" />
+      </Button>
+      <Button
+        variant={showRoutes ? "secondary" : "ghost"}
+        size="icon"
+        title="Toggle routed paths (spaghetti diagram)"
+        aria-label="Toggle routed paths"
+        aria-pressed={showRoutes}
+        onClick={toggleRoutes}
+      >
+        <Spline className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"

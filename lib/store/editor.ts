@@ -32,6 +32,8 @@ interface EditorState {
   /** Whether to draw the flow-usage heatmap overlay. */
   showHeatmap: boolean;
   showFlows: boolean;
+  /** Draw obstacle-aware routed paths (spaghetti diagram). */
+  showRoutes: boolean;
 
   // lifecycle
   load: (p: LayoutProject) => void;
@@ -42,6 +44,7 @@ interface EditorState {
   setTool: (t: EditorTool) => void;
   toggleHeatmap: () => void;
   toggleFlows: () => void;
+  toggleRoutes: () => void;
 
   // history
   pushHistory: () => void;
@@ -119,6 +122,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   future: [],
   showHeatmap: false,
   showFlows: true,
+  showRoutes: false,
 
   load: (p) => set({ project: p, past: [], future: [], selectedId: null }),
   reset: () => set({ project: null, past: [], future: [], selectedId: null }),
@@ -127,6 +131,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   setTool: (t) => set({ tool: t }),
   toggleHeatmap: () => set({ showHeatmap: !get().showHeatmap }),
   toggleFlows: () => set({ showFlows: !get().showFlows }),
+  toggleRoutes: () => set({ showRoutes: !get().showRoutes }),
 
   pushHistory: () => {
     const current = get().project;

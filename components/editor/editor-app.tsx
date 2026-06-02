@@ -6,6 +6,7 @@ import { useEditor } from "@/lib/store/editor";
 import { getStorageProvider } from "@/lib/storage";
 import { makeDemoProject, DEMO_PROJECT_ID } from "@/lib/seed/demo";
 import { computeFlowHeatmap } from "@/lib/flow/heatmap";
+import { computeFlowRoutes } from "@/lib/flow/routes";
 import { Button } from "@/components/ui/button";
 import { LayoutCanvas, type CanvasHandle } from "./canvas";
 import { Toolbar } from "./toolbar";
@@ -19,6 +20,7 @@ export function EditorApp({ projectId }: { projectId: string }) {
   const load = useEditor((s) => s.load);
   const reset = useEditor((s) => s.reset);
   const showHeatmap = useEditor((s) => s.showHeatmap);
+  const showRoutes = useEditor((s) => s.showRoutes);
   const [status, setStatus] = React.useState<"loading" | "ready" | "notfound">(
     "loading"
   );
@@ -104,6 +106,10 @@ export function EditorApp({ projectId }: { projectId: string }) {
     () => (project && showHeatmap ? computeFlowHeatmap(project) : null),
     [project, showHeatmap]
   );
+  const routes = React.useMemo(
+    () => (project && showRoutes ? computeFlowRoutes(project) : null),
+    [project, showRoutes]
+  );
 
   if (status === "notfound") {
     return (
@@ -133,7 +139,7 @@ export function EditorApp({ projectId }: { projectId: string }) {
         {/* Center: canvas */}
         <div className="relative min-h-[60vh] bg-canvas-bg lg:min-h-0">
           {status === "ready" ? (
-            <LayoutCanvas ref={canvasRef} heatmap={heatmap} />
+            <LayoutCanvas ref={canvasRef} heatmap={heatmap} routes={routes} />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
               Loading layout…

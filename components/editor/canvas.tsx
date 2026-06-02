@@ -9,6 +9,7 @@ import { bbox, machineCenter, rotatedFootprint, snapToBoundary } from "@/lib/geo
 import { computeSnap } from "@/lib/editor/snap";
 import { useElementSize } from "@/hooks/use-element-size";
 import type { HeatmapField } from "@/lib/flow/heatmap";
+import type { FlowRoute } from "@/lib/flow/routes";
 
 interface View {
   scale: number; // pixels per meter
@@ -24,10 +25,11 @@ export interface CanvasHandle {
 
 interface CanvasProps {
   heatmap?: HeatmapField | null;
+  routes?: FlowRoute[] | null;
 }
 
 export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
-  function LayoutCanvas({ heatmap }, ref) {
+  function LayoutCanvas({ heatmap, routes }, ref) {
     const { ref: boxRef, width, height } = useElementSize<HTMLDivElement>();
     const stageRef = React.useRef<Konva.Stage>(null);
 
@@ -36,6 +38,7 @@ export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
     const tool = useEditor((s) => s.tool);
     const showFlows = useEditor((s) => s.showFlows);
     const showHeatmap = useEditor((s) => s.showHeatmap);
+    const showRoutes = useEditor((s) => s.showRoutes);
     const select = useEditor((s) => s.select);
     const setMachinePos = useEditor((s) => s.setMachinePos);
     const pushHistory = useEditor((s) => s.pushHistory);
@@ -323,6 +326,31 @@ export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
             </Layer>
           )}
 
+          {/* Routed spaghetti paths */}
+          {showRoutes && routes && (
+            <Layer listening={false}>
+              {routes.map((r, i) => {
+                if (r.points.length < 2) return null;
+                const w = Math.min(
+                  5 / view.scale,
+                  (0.6 + r.unitsPerDay / 80) / view.scale
+                );
+                return (
+                  <Line
+                    key={i}
+                    points={r.points.flatMap((p) => [p.x, p.y])}
+                    stroke={routeColor(i)}
+                    strokeWidth={w}
+                    opacity={0.7}
+                    lineJoin="round"
+                    lineCap="round"
+                    tension={0.05}
+                  />
+                );
+              })}
+            </Layer>
+          )}
+
           {/* Machines */}
           <Layer>
             {project.machines.map((m) => (
@@ -553,6 +581,21 @@ function HeatmapLayer({ field }: { field: HeatmapField }) {
     }
   }
   return <>{cells}</>;
+}
+
+/** Distinct, stable colors per routed flow so paths are tellable apart. */
+const ROUTE_PALETTE = [
+  "#f97316",
+  "#3b82f6",
+  "#22c55e",
+  "#a855f7",
+  "#14b8a6",
+  "#eab308",
+  "#ef4444",
+  "#0ea5e9",
+];
+function routeColor(i: number): string {
+  return ROUTE_PALETTE[i % ROUTE_PALETTE.length];
 }
 
 /** Blue → cyan → yellow → red ramp. */
