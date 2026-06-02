@@ -17,7 +17,11 @@ import { getStorageProvider } from "@/lib/storage";
 import { uid } from "@/lib/utils";
 import { bbox, rotatedFootprint } from "@/lib/geometry";
 
-export type EditorTool = "select" | "draw_obstacle" | "draw_nogo";
+export type EditorTool =
+  | "select"
+  | "draw_obstacle"
+  | "draw_nogo"
+  | "place_exit";
 
 interface EditorState {
   project: LayoutProject | null;
@@ -65,6 +69,10 @@ interface EditorState {
   addSafetyRule: (rule: Omit<SafetyRule, "id">) => void;
   updateSafetyRule: (id: string, patch: Partial<SafetyRule>) => void;
   removeSafetyRule: (id: string) => void;
+
+  // exits (egress doors)
+  addExit: (pos: Vec2) => void;
+  removeExit: (id: string) => void;
 
   // floor / weights
   updateFloor: (patch: Partial<Floor>) => void;
@@ -279,6 +287,16 @@ export const useEditor = create<EditorState>((set, get) => ({
   removeSafetyRule: (id) =>
     commit(set, get, (d) => {
       d.safetyRules = d.safetyRules.filter((r) => r.id !== id);
+    }),
+
+  addExit: (pos) =>
+    commit(set, get, (d) => {
+      d.floor.exits = [...(d.floor.exits ?? []), { id: uid("exit"), pos }];
+    }),
+
+  removeExit: (id) =>
+    commit(set, get, (d) => {
+      d.floor.exits = (d.floor.exits ?? []).filter((e) => e.id !== id);
     }),
 
   updateFloor: (patch) =>

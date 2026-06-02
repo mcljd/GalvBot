@@ -5,6 +5,7 @@ import { Download, FileJson, FileText, Image as ImageIcon } from "lucide-react";
 import { useEditor } from "@/lib/store/editor";
 import { scoreLayout } from "@/lib/optimizer/scoring";
 import { computeBusinessCase } from "@/lib/economics";
+import { computeCompliance } from "@/lib/compliance";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -64,6 +65,7 @@ export function ExportMenu({
     const { jsPDF } = await import("jspdf");
     const score = scoreLayout(project);
     const bc = computeBusinessCase(project);
+    const comp = computeCompliance(project);
     const img = canvasRef.current?.toDataURL();
 
     const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -132,6 +134,31 @@ export function ExportMenu({
       ],
     ];
     for (const [label, val] of econ) {
+      doc.setTextColor(80);
+      doc.text(label, margin, y);
+      doc.setTextColor(0);
+      doc.text(val, margin + 60, y);
+      y += 6;
+    }
+
+    // Egress & aisle compliance
+    y += 4;
+    doc.setFontSize(13);
+    doc.text("Egress & aisle compliance (advisory)", margin, y);
+    y += 6;
+    doc.setFontSize(11);
+    const egress: [string, string][] = [
+      ["Egress doors", `${comp.exitCount} (target ≥ ${comp.standard.minExits})`],
+      [
+        "Narrowest aisle",
+        `${comp.narrowestAisle} m (min ${comp.standard.minAisleWidth} m)`,
+      ],
+      [
+        "Max travel to exit",
+        `${comp.maxTravelDistance} m (max ${comp.standard.maxTravelDistance} m)`,
+      ],
+    ];
+    for (const [label, val] of egress) {
       doc.setTextColor(80);
       doc.text(label, margin, y);
       doc.setTextColor(0);

@@ -74,6 +74,11 @@ const floor: Floor = {
     { id: "dock-in", pos: { x: 0, y: 4 }, type: "inbound" },
     { id: "dock-out", pos: { x: 30, y: 16 }, type: "outbound" },
   ],
+  exits: [
+    { id: "exit-1", pos: { x: 0, y: 14 } },
+    { id: "exit-2", pos: { x: 30, y: 6 } },
+    { id: "exit-3", pos: { x: 15, y: 0 } },
+  ],
   gridResolution: 0.5,
 };
 

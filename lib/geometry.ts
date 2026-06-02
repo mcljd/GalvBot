@@ -114,6 +114,24 @@ export function rectInsideBoundary(r: Rect, boundary: Vec2[]): boolean {
   );
 }
 
+/** Snap a point to the nearest point on a rectangle's perimeter (for placing
+ *  boundary features like egress doors on a roughly-rectangular floor). */
+export function snapToBoundary(pt: Vec2, boundary: Vec2[]): Vec2 {
+  const b = bbox(boundary);
+  const cx = Math.min(Math.max(b.x, pt.x), b.x + b.w);
+  const cy = Math.min(Math.max(b.y, pt.y), b.y + b.h);
+  // distance to each of the 4 edges from the clamped point
+  const dl = cx - b.x;
+  const dr = b.x + b.w - cx;
+  const dt = cy - b.y;
+  const db = b.y + b.h - cy;
+  const m = Math.min(dl, dr, dt, db);
+  if (m === dl) return { x: b.x, y: cy };
+  if (m === dr) return { x: b.x + b.w, y: cy };
+  if (m === dt) return { x: cx, y: b.y };
+  return { x: cx, y: b.y + b.h };
+}
+
 /** Distance between two axis-aligned rects (0 if touching/overlapping). */
 export function rectDistance(a: Rect, b: Rect): number {
   const dx = Math.max(0, Math.max(a.x - (b.x + b.w), b.x - (a.x + a.w)));

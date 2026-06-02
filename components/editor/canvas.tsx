@@ -5,7 +5,7 @@ import { Stage, Layer, Rect, Line, Circle, Group, Text } from "react-konva";
 import type Konva from "konva";
 import { useEditor } from "@/lib/store/editor";
 import { MACHINE_META, type Machine, type Vec2 } from "@/lib/types";
-import { bbox, machineCenter, rotatedFootprint } from "@/lib/geometry";
+import { bbox, machineCenter, rotatedFootprint, snapToBoundary } from "@/lib/geometry";
 import { computeSnap } from "@/lib/editor/snap";
 import { useElementSize } from "@/hooks/use-element-size";
 import type { HeatmapField } from "@/lib/flow/heatmap";
@@ -41,6 +41,7 @@ export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
     const pushHistory = useEditor((s) => s.pushHistory);
     const addSafetyRule = useEditor((s) => s.addSafetyRule);
     const updateFloor = useEditor((s) => s.updateFloor);
+    const addExit = useEditor((s) => s.addExit);
 
     const [view, setView] = React.useState<View>({ scale: 20, x: 0, y: 0 });
     const [draft, setDraft] = React.useState<{ start: Vec2; end: Vec2 } | null>(
@@ -140,6 +141,10 @@ export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
       }
       const stage = stageRef.current!;
       const p = toMeters(stage.getPointerPosition()!);
+      if (tool === "place_exit") {
+        addExit(snapToBoundary(p, project!.floor.boundary));
+        return;
+      }
       setDraft({ start: p, end: p });
     }
 
@@ -263,6 +268,30 @@ export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
                   fill="var(--color-foreground)"
                   x={0.6}
                   y={-0.25}
+                />
+              </Group>
+            ))}
+            {(project.floor.exits ?? []).map((ex) => (
+              <Group key={ex.id} x={ex.pos.x} y={ex.pos.y}>
+                <Rect
+                  x={-0.6}
+                  y={-0.35}
+                  width={1.2}
+                  height={0.7}
+                  cornerRadius={0.1}
+                  fill="var(--color-success)"
+                  opacity={0.85}
+                />
+                <Text
+                  text="EXIT"
+                  fontSize={0.4}
+                  fontStyle="700"
+                  fill="#0b0b0b"
+                  x={-0.6}
+                  y={-0.2}
+                  width={1.2}
+                  align="center"
+                  listening={false}
                 />
               </Group>
             ))}

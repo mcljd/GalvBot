@@ -14,6 +14,8 @@ export interface Floor {
   obstacles: { id: string; polygon: Vec2[]; label?: string }[];
   /** Fixed inbound/outbound dock points. */
   docks: { id: string; pos: Vec2; type: "inbound" | "outbound" }[];
+  /** Emergency egress doors on the boundary (for code-compliance checks). */
+  exits?: { id: string; pos: Vec2 }[];
   /** Meters per cell for the solver's discretized grid. */
   gridResolution: number;
 }

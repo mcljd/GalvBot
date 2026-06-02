@@ -14,6 +14,7 @@ import {
   Maximize,
   Route,
   Flame,
+  DoorOpen,
 } from "lucide-react";
 import { useEditor, type EditorTool } from "@/lib/store/editor";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ const TOOLS: { id: EditorTool; label: string; icon: React.ElementType }[] = [
   { id: "select", label: "Select / move", icon: MousePointer2 },
   { id: "draw_obstacle", label: "Draw obstacle", icon: Square },
   { id: "draw_nogo", label: "Draw no-go zone", icon: Ban },
+  { id: "place_exit", label: "Place egress exit", icon: DoorOpen },
 ];
 
 export function Toolbar({
