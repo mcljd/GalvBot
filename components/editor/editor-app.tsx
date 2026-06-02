@@ -69,6 +69,20 @@ export function EditorApp({ projectId }: { projectId: string }) {
         return;
       }
       if (typing) return;
+      if (e.key.startsWith("Arrow") && s.selectedId && s.project) {
+        e.preventDefault();
+        const step = e.shiftKey ? 0.1 : s.project.floor.gridResolution;
+        const d =
+          e.key === "ArrowLeft"
+            ? [-step, 0]
+            : e.key === "ArrowRight"
+              ? [step, 0]
+              : e.key === "ArrowUp"
+                ? [0, -step]
+                : [0, step];
+        s.nudgeMachine(s.selectedId, d[0], d[1]);
+        return;
+      }
       if (e.key === "r" || e.key === "R") {
         if (s.selectedId) s.rotateMachine(s.selectedId);
       } else if (e.key === "Delete" || e.key === "Backspace") {

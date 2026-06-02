@@ -6,6 +6,7 @@ import type Konva from "konva";
 import { useEditor } from "@/lib/store/editor";
 import { MACHINE_META, type Machine, type Vec2 } from "@/lib/types";
 import { bbox, machineCenter, rotatedFootprint } from "@/lib/geometry";
+import { computeSnap } from "@/lib/editor/snap";
 import { useElementSize } from "@/hooks/use-element-size";
 import type { HeatmapField } from "@/lib/flow/heatmap";
 
@@ -45,6 +46,7 @@ export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
     const [draft, setDraft] = React.useState<{ start: Vec2; end: Vec2 } | null>(
       null
     );
+    const [guides, setGuides] = React.useState<{ x?: number; y?: number }>({});
 
     const floorBox = React.useMemo(
       () => (project ? bbox(project.floor.boundary) : { x: 0, y: 0, w: 0, h: 0 }),
@@ -292,17 +294,48 @@ export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
                 onSelect={() => select(m.id)}
                 onDragStart={pushHistory}
                 onDragMove={(pos) => {
-                  const snapped = {
-                    x: Math.round(pos.x / grid) * grid,
-                    y: Math.round(pos.y / grid) * grid,
-                  };
-                  return clampMachine(m, snapped);
+                  const mf = rotatedFootprint(m);
+                  const others = project.machines
+                    .filter((o) => o.id !== m.id && o.pos)
+                    .map((o) => {
+                      const of = rotatedFootprint(o);
+                      return { pos: o.pos!, w: of.w, d: of.d };
+                    });
+                  const snap = computeSnap(
+                    { pos, w: mf.w, d: mf.d },
+                    others,
+                    floorBox,
+                    grid
+                  );
+                  setGuides({ x: snap.guideX, y: snap.guideY });
+                  return clampMachine(m, snap.pos);
                 }}
-                onDragEnd={(pos) =>
-                  setMachinePos(m.id, clampMachine(m, pos), false)
-                }
+                onDragEnd={(pos) => {
+                  setGuides({});
+                  setMachinePos(m.id, clampMachine(m, pos), false);
+                }}
               />
             ))}
+
+            {/* Alignment guides */}
+            {guides.x !== undefined && (
+              <Line
+                points={[guides.x, floorBox.y, guides.x, floorBox.y + floorBox.h]}
+                stroke="var(--color-primary)"
+                strokeWidth={1 / view.scale}
+                dash={[0.4, 0.3]}
+                listening={false}
+              />
+            )}
+            {guides.y !== undefined && (
+              <Line
+                points={[floorBox.x, guides.y, floorBox.x + floorBox.w, guides.y]}
+                stroke="var(--color-primary)"
+                strokeWidth={1 / view.scale}
+                dash={[0.4, 0.3]}
+                listening={false}
+              />
+            )}
 
             {/* Drawing draft rect */}
             {draft && (

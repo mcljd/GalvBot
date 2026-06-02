@@ -15,7 +15,7 @@ import type {
 import { MACHINE_META } from "@/lib/types";
 import { getStorageProvider } from "@/lib/storage";
 import { uid } from "@/lib/utils";
-import { bbox } from "@/lib/geometry";
+import { bbox, rotatedFootprint } from "@/lib/geometry";
 
 export type EditorTool = "select" | "draw_obstacle" | "draw_nogo";
 
@@ -50,6 +50,7 @@ interface EditorState {
   addMachine: (type: MachineType, pos: Vec2) => string;
   updateMachine: (id: string, patch: Partial<Machine>, history?: boolean) => void;
   setMachinePos: (id: string, pos: Vec2, history?: boolean) => void;
+  nudgeMachine: (id: string, dx: number, dy: number) => void;
   rotateMachine: (id: string) => void;
   toggleLock: (id: string) => void;
   duplicateMachine: (id: string) => void;
@@ -195,6 +196,18 @@ export const useEditor = create<EditorState>((set, get) => ({
       },
       history
     ),
+
+  nudgeMachine: (id, dx, dy) =>
+    commit(set, get, (d) => {
+      const m = d.machines.find((x) => x.id === id);
+      if (!m || !m.pos || m.fixed) return;
+      const fb = bbox(d.floor.boundary);
+      const f = rotatedFootprint(m);
+      m.pos = {
+        x: Math.min(Math.max(fb.x, m.pos.x + dx), fb.x + fb.w - f.w),
+        y: Math.min(Math.max(fb.y, m.pos.y + dy), fb.y + fb.h - f.d),
+      };
+    }),
 
   rotateMachine: (id) =>
     commit(set, get, (d) => {

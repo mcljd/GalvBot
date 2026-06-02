@@ -38,3 +38,62 @@ describe("computeSnap", () => {
     expect(r.guideX).toBeCloseTo(20, 5);
   });
 });
+
+import { useEditor } from "@/lib/store/editor";
+import type { LayoutProject } from "@/lib/types";
+import { DEFAULT_WEIGHTS } from "@/lib/types";
+
+function nudgeProject(): LayoutProject {
+  return {
+    id: "n",
+    name: "n",
+    floor: {
+      id: "f",
+      name: "f",
+      boundary: [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+      ],
+      obstacles: [],
+      docks: [],
+      gridResolution: 0.5,
+    },
+    machines: [
+      {
+        id: "m1",
+        type: "assembly_station",
+        label: "m1",
+        footprint: { w: 2, d: 2 },
+        clearance: 0.5,
+        rotationDeg: 0,
+        pos: { x: 4, y: 4 },
+      },
+    ],
+    flows: [],
+    safetyRules: [],
+    weights: { ...DEFAULT_WEIGHTS },
+    createdAt: "now",
+    updatedAt: "now",
+  };
+}
+
+describe("nudgeMachine", () => {
+  it("moves a machine and clamps to the floor boundary", () => {
+    useEditor.getState().load(nudgeProject());
+    useEditor.getState().nudgeMachine("m1", 1, 0);
+    expect(useEditor.getState().project!.machines[0].pos).toEqual({ x: 5, y: 4 });
+    // push hard against the right edge: 10 - width(2) = 8 max
+    for (let i = 0; i < 20; i++) useEditor.getState().nudgeMachine("m1", 1, 0);
+    expect(useEditor.getState().project!.machines[0].pos!.x).toBe(8);
+  });
+
+  it("never moves a locked machine", () => {
+    const p = nudgeProject();
+    p.machines[0].fixed = true;
+    useEditor.getState().load(p);
+    useEditor.getState().nudgeMachine("m1", 1, 1);
+    expect(useEditor.getState().project!.machines[0].pos).toEqual({ x: 4, y: 4 });
+  });
+});
