@@ -55,7 +55,9 @@ export function EditorApp({ projectId }: { projectId: string }) {
       const typing =
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT";
+        target.tagName === "SELECT" ||
+        target.isContentEditable ||
+        target.getAttribute?.("role") === "textbox";
       const s = useEditor.getState();
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
@@ -118,18 +120,18 @@ export function EditorApp({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <Toolbar canvasRef={canvasRef} onFit={() => canvasRef.current?.fit()} />
-      <div className="grid flex-1 grid-cols-[260px_1fr_340px] overflow-hidden">
+      <div className="grid flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[260px_1fr_340px] lg:overflow-hidden">
         {/* Left: palette + machines + properties */}
-        <aside className="flex flex-col gap-4 overflow-y-auto border-r p-3">
+        <aside className="flex flex-col gap-4 overflow-y-auto border-r p-3 lg:max-h-full">
           <MachinePalette />
           <MachineList />
           <MachineProperties />
         </aside>
 
         {/* Center: canvas */}
-        <div className="relative bg-canvas-bg">
+        <div className="relative min-h-[60vh] bg-canvas-bg lg:min-h-0">
           {status === "ready" ? (
             <LayoutCanvas ref={canvasRef} heatmap={heatmap} />
           ) : (

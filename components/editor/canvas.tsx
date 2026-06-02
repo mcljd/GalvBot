@@ -176,7 +176,13 @@ export const LayoutCanvas = React.forwardRef<CanvasHandle, CanvasProps>(
     }
 
     return (
-      <div ref={boxRef} className="relative h-full w-full overflow-hidden">
+      <div
+        ref={boxRef}
+        role="application"
+        tabIndex={0}
+        aria-label={`Layout canvas for ${project.name}. ${project.machines.length} machines. Select a machine in the left panel, then use arrow keys to move it, R to rotate, L to lock.`}
+        className="relative h-full w-full overflow-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+      >
         <Stage
           ref={stageRef}
           width={width}

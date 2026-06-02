@@ -161,7 +161,7 @@ export function SolverPanel() {
         )}
 
         {running && (
-          <div className="space-y-2">
+          <div className="space-y-2" role="status" aria-live="polite">
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1.5 text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" /> Optimizing…
@@ -188,7 +188,11 @@ export function SolverPanel() {
         )}
 
         {showResult && result && (
-          <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+          <div
+            className="space-y-3 rounded-lg border bg-muted/30 p-3"
+            role="status"
+            aria-live="polite"
+          >
             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Optimization result
             </div>

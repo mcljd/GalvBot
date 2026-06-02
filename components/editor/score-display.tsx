@@ -10,14 +10,33 @@ function scoreColor(v: number) {
   return "var(--color-destructive)";
 }
 
+/** Text qualifier so quality isn't conveyed by color alone (WCAG 1.4.1). */
+export function scoreLabel(v: number) {
+  if (v >= 80) return "good";
+  if (v >= 55) return "fair";
+  return "poor";
+}
+
 function Bar({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-xs">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium tabular-nums">{value.toFixed(1)}</span>
+        <span className="font-medium tabular-nums">
+          {value.toFixed(1)}
+          <span className="ml-1 font-normal text-muted-foreground">
+            ({scoreLabel(value)})
+          </span>
+        </span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+      <div
+        className="h-2 w-full overflow-hidden rounded-full bg-secondary"
+        role="meter"
+        aria-valuenow={Math.round(value)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${label}: ${value.toFixed(1)} out of 100, ${scoreLabel(value)}`}
+      >
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${value}%`, backgroundColor: scoreColor(value) }}
@@ -49,6 +68,9 @@ export function ScoreDisplay({
             style={{ color: scoreColor(score.total) }}
           >
             {score.total.toFixed(1)}
+            <span className="ml-2 align-middle text-sm font-medium capitalize text-muted-foreground">
+              {scoreLabel(score.total)}
+            </span>
           </div>
         </div>
         <div className="text-right text-xs text-muted-foreground">

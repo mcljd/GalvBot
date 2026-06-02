@@ -132,7 +132,10 @@ export function ScanImporter() {
       </p>
 
       {error && (
-        <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+        <p
+          role="alert"
+          className="mt-4 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+        >
           {error}
         </p>
       )}
@@ -154,7 +157,7 @@ export function ScanImporter() {
               ) : (
                 <Upload className="h-8 w-8 text-muted-foreground" />
               )}
-              <div>
+              <div role="status" aria-live="polite">
                 <div className="font-medium">
                   {loading ? "Analyzing image…" : "Drop an image or click to upload"}
                 </div>
